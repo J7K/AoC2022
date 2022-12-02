@@ -7,22 +7,25 @@ fn main() {
     assert!((args.len() > 1), "Missing input file argument");
 
     let file = File::open(&args[1]).unwrap();
-    let lines = BufReader::new(file).lines();
+    let lines: Vec<_> = BufReader::new(file)
+        .lines()
+        .filter_map(|x|x.ok())
+        .collect();
 
+    
     // Compute calorie payload per elf
     let mut accum: u32 = 0;
     let mut elves_payload: Vec<u32> = Vec::new();
     for line in lines  
     {
-        let data: String = line.unwrap();
-        if data.is_empty()
+        if line.is_empty()
         {
             elves_payload.push(accum);
             accum = 0;
         }
         else
         {
-            accum += data.parse::<u32>().unwrap();
+            accum += line.parse::<u32>().unwrap();
         }
     }
     // Account for end of file
