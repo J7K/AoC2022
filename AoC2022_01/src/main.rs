@@ -9,7 +9,7 @@ fn main() {
     let file = File::open(&args[1]).unwrap();
     let lines: Vec<_> = BufReader::new(file)
         .lines()
-        .filter_map(|x|x.ok())
+        .filter_map(Result::ok)
         .collect();
 
     
