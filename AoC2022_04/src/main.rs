@@ -13,8 +13,8 @@ fn main() {
     
     let re = Regex::new(r"(\d+)-(\d+),(\d+)-(\d+)").unwrap();
     let bounds :Vec<_> = re.captures_iter(data.as_str())
-        .map(|cap|cap.iter().skip(1).map(|m| m.unwrap().as_str().parse::<usize>().unwrap()).collect::<Vec<_>>())
-        .flatten()
+        .flat_map(|cap|cap.iter().skip(1).collect::<Vec<_>>())
+        .map(|m|m.unwrap().as_str())
         .collect();
 
     let silver_ans = bounds.chunks(4)
