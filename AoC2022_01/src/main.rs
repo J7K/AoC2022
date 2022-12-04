@@ -6,43 +6,23 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     assert!((args.len() > 1), "Missing input file argument");
 
-    let file = File::open(&args[1]).unwrap();
-    let lines: Vec<_> = BufReader::new(file)
-        .lines()
-        .filter_map(Result::ok)
-        .collect();
+    let file = File::open(&args[1]).expect("Failed to open file"); 
+    let mut data: String = String::new();
+    BufReader::new(file).read_to_string(&mut data).expect("Failed to read file");
 
-    
-    // Compute calorie payload per elf
-    let mut accum: u32 = 0;
-    let mut elves_payload: Vec<u32> = Vec::new();
-    for line in lines  
-    {
-        if line.is_empty()
-        {
-            elves_payload.push(accum);
-            accum = 0;
-        }
-        else
-        {
-            accum += line.parse::<u32>().unwrap();
-        }
-    }
-    // Account for end of file
-    elves_payload.push(accum);
+    let mut elves_payloads: Vec<usize> = data.split("\r\n\r\n").into_iter()
+        .map(|s| s.split("\r\n").collect::<Vec<_>>())
+        .map(|s| s.iter().map(|s| s.parse::<usize>()).filter_map(std::result::Result::ok).sum())
+        .collect();        
 
-    // Find max carrying elf
-    let max_payload = elves_payload.iter().max().unwrap();
+    let max_payload = elves_payloads.iter().max().unwrap();
+    println!("Silver: {}", &max_payload);
 
-    println!("Max carrying elf: {}", &max_payload);
+    assert!(elves_payloads.len() >=3, "More than 3 elves are required as input" );
+    elves_payloads.sort();
+    elves_payloads.reverse();
+    let total_payload_top3 = elves_payloads[0] + elves_payloads[1] + elves_payloads[2];
 
-
-    assert!(elves_payload.len() >=3, "More than 3 elves are required as input" );
-    elves_payload.sort();
-    elves_payload.reverse();
-    let total_payload_top3 = elves_payload[0] + elves_payload[1] + elves_payload[2];
-
-    println!("Payload of top3 carrying elves: {}", total_payload_top3);
-
+    println!("Gold: {}", total_payload_top3);
 }
 
