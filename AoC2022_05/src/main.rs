@@ -50,11 +50,11 @@ impl CrateStacks
         assert!(op.nb_crates <= self.stack_array[op.origin].len());
 
         let mut tmp: Vec<char> = Vec::new();
-        for i in 0..op.nb_crates
+        for _ in 0..op.nb_crates
         {
             tmp.push(self.stack_array[op.origin].pop().unwrap());
         }
-        for i in 0..op.nb_crates
+        for _ in 0..op.nb_crates
         {
             self.stack_array[op.destination].push(tmp.pop().unwrap());
         }
@@ -62,7 +62,7 @@ impl CrateStacks
 
     fn new(layout: &str) -> Self
     {   
-        let lines = layout
+        let indexed_crates = layout
             .split('\n')
             .into_iter()
             .rev()
@@ -76,9 +76,9 @@ impl CrateStacks
             })
             .collect::<Vec<_>>();
         
-        let mut stacks = vec![Vec::<_>::new(); lines.iter().map(|(i, _)| i).max().unwrap() + 1];
+        let mut stacks = vec![Vec::<_>::new(); indexed_crates.iter().map(|(i, _)| i).max().unwrap() + 1];
 
-        for (i, c) in lines
+        for (i, c) in indexed_crates
         {
             stacks[i].push(c);
         }
