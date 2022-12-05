@@ -67,12 +67,11 @@ impl CrateStacks
             .into_iter()
             .rev()
             .skip(1)
-            .flat_map(|line| {
-                line.chars()
-                    .skip(1)
-                    .step_by(4)
-                    .enumerate()
-                    .filter(|(_, c)| *c != ' ')
+            .flat_map(|line| {line.chars()
+                                        .skip(1)
+                                        .step_by(4)
+                                        .enumerate()
+                                        .filter(|(_, c)| *c != ' ')
             })
             .collect::<Vec<_>>();
         
