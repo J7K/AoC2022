@@ -62,7 +62,7 @@ impl CrateStacks
 
     fn new(layout: &str) -> Self
     {   
-        let indexed_crates = layout
+        let indexed_crates: Vec<(usize, char)> = layout
             .split('\n')
             .into_iter()
             .rev()
@@ -73,7 +73,7 @@ impl CrateStacks
                                         .enumerate()
                                         .filter(|(_, c)| *c != ' ')
             })
-            .collect::<Vec<_>>();
+            .collect();
         
         let mut stacks = vec![Vec::<_>::new(); indexed_crates.iter().map(|(i, _)| i).max().unwrap() + 1];
 
