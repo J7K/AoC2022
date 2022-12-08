@@ -3,13 +3,7 @@ use std::env;
 use std::io::*;
 use std::fs::*;
 
-enum Direction
-{
-    North,
-    South,
-    East,
-    West,
-}
+enum Direction { North, South, East,West, }
 
 struct Forrest
 {
@@ -112,30 +106,21 @@ impl Forrest
     fn visible_from_all(&self) -> HashSet<(usize, usize)>
     {
         let mut visible_set: HashSet<(usize, usize)> = HashSet::new();
-        // From North
         for x in 0..self.max_x
         {
-            visible_set.extend(self.visible_from(&(x, 0), &Direction::South));
-            
-        }
-        // From South
-        for x in 0..self.max_x
-        {
+            visible_set.extend(self.visible_from(&(x, 0), &Direction::South));   
             visible_set.extend(self.visible_from(&(x, self.max_y - 1), &Direction::North));
         }
-        // From East
         for y in 0..self.max_y
         {
             visible_set.extend(self.visible_from(&(self.max_x - 1, y), &Direction::West));
-        }
-        // From West
-        for y in 0..self.max_y
-        {
             visible_set.extend(self.visible_from(&(0, y), &Direction::East));
         }
 
         visible_set
     }
+
+
 }
 
 fn main() {
