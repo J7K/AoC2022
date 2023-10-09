@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use std::env;
 use std::io::*;
 use std::fs::*;
@@ -17,8 +18,21 @@ struct Map
     height: usize,
 }
 
+fn strip(c: char) -> char
+{
+    let b = match c
+    {
+        'S' => 'a',
+        'E' => 'z',
+            _ => c,
+    };
+
+    b
+}
+
 impl Map 
 {
+    
     fn read_from_str(data: &str) -> Self
     {
         let map: Vec<Vec<char>> = data.lines().map(|line| line.chars().collect::<Vec<char>>()).collect();
@@ -48,12 +62,17 @@ impl Map
             Direction::East => if (x + 1) == self.width { None } else { Some((x + 1, y)) },
             Direction::West => if x == 0 { None } else { Some((x - 1, y)) },
         };
-        if dest.is_some() && (self.get(pos) != 'S' || self.get(dest.unwrap()) != 'E') 
+        if dest.is_some() 
         {
-            if (self.get(dest.unwrap()) as u8 - self.get(pos) as u8) > 1 { 
+            let org = strip(self.get(pos));
+            let dst = strip(self.get(dest.unwrap()));
+            let diff = dst as i8 - org as i8;
+            if diff > 1 
+            { 
                 dest = None; 
             }
         }
+
         dest
     }
 
@@ -63,36 +82,53 @@ impl Map
         self.map[y][x]
     }
 
-    fn shortest_path(&self) -> Vec<(usize, usize)>
+    fn find_start(&self) -> Option<(usize, usize)>
     {
-        let mut path = Vec::new();
-        let mut visited = Vec::new();
-        let start = (0, 0);
-        visited.push(start);
-        self.find_path(start, &mut path, &mut visited);
-        path
-    }
-
-    fn find_path(&self, pos: (usize, usize), path: &mut Vec<(usize, usize)>, visited: &mut Vec<(usize, usize)>) -> bool
-    {
-        let mut result = false;
-        if self.get(pos) == 'E' { result = true; }
-        else
+        for y in 0..self.height
         {
-            let next = self.reach_from(pos);
-            for n in next
+            for x in 0..self.width
             {
-                if !visited.contains(&n)
-                {
-                    visited.push(n);
-                    result = self.find_path(n, path, visited);
-                    if result { break; }
-                    visited.pop();
-                }
+                if self.get((x, y)) == 'S' { return Some((x, y)); }
             }
         }
-        if result { path.push(pos); }
-        result
+
+        None
+    }
+
+    fn shortest_path(&self, x0: usize, y0: usize) -> Option<usize>
+    {
+        let mut queue: VecDeque<(usize, usize, usize)> = VecDeque::new();
+        let mut visited = vec!(vec![false; self.height]; self.width);
+
+        queue.push_back((x0, y0, 0));
+        visited[x0][y0] = true;
+
+        while(queue.len() > 0)
+        {
+            let (x, y, dist) = queue.pop_front().unwrap();
+            if self.get((x, y)) == 'E' { return Some(dist); }
+            let mut next = self.reach_from((x, y));
+            next.retain(|(x, y)| !visited[*x][*y]);
+            next.iter().for_each(|(x, y)| visited[*x][*y] = true);
+            next.iter().for_each(|(x, y)| queue.push_back((*x, *y, dist + 1)));
+        }
+        
+        None
+    }
+
+    fn shortest_all_paths(&self) -> Option<usize>
+    {
+        let mut starts = Vec::new();
+        for y in 0..self.height
+        {
+            for x in 0..self.width
+            {
+                let current = self.get((x, y));
+                if (current == 'S' || current == 'a') { starts.push((x, y)); }
+            }
+        }
+
+        return starts.iter().map(|(x, y)| self.shortest_path(*x, *y)).filter(|x| x.is_some()).map(|x| x.unwrap()).min();
     }
 }
 
@@ -106,7 +142,11 @@ fn main() {
     BufReader::new(file).read_to_string(&mut data).expect("Failed to read file");
 
     let map = Map::read_from_str(&data);
-    let path = map.shortest_path();
-    dbg!(path);
+    let (x0, y0) = map.find_start().unwrap();
+    let silver = map.shortest_path(x0, y0);
+    println!("Silver: {}", silver.unwrap());
+
+    let gold = map.shortest_all_paths();
+    println!("Gold: {}", gold.unwrap());
 }
 
