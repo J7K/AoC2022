@@ -3,7 +3,7 @@ use std::collections::*;
 use std::io::*;
 use std::fs::*;
 
-struct Cave{    
+struct Cave {    
     rocks: HashMap<usize, HashSet<usize>>,
     floor: usize,
 }
@@ -19,10 +19,13 @@ impl Cave
 
     fn add_rock(&mut self, x: usize, y: usize) {
         let set = self.rocks.get_mut(&x);
-        if set.is_none() {
-            self.rocks.insert(x, HashSet::new());
+        match set {
+            Some(s) => {s.insert(y);},
+            None => {
+                let mut s = HashSet::new();
+                s.insert(y); self.rocks.insert(x, s);
+            },
         }
-        self.rocks.get_mut(&x).unwrap().insert(y);        
     }
 
     fn add_rock_path(&mut self, path: &Vec<(usize, usize)>) {
@@ -49,7 +52,7 @@ impl Cave
             origin = next;
         }
 
-        self.floor = self.floor_ord();
+        self.floor = self.compute_floor();
     }
     
     fn drop_rock(&mut self, x: usize, y: usize) -> Option<(usize, usize)> {
@@ -66,35 +69,26 @@ impl Cave
     }
 
     fn drop_rock_with_floor(&mut self, x: usize, y: usize) -> (usize, usize) {
-        let set = self.rocks.get_mut(&x);
-        if set.is_some() {
-            let contact_y = set.unwrap().iter().filter(|current| y < **current).min();
-            if contact_y.is_some() {
-                return (x, *contact_y.unwrap());
-            }
+        let contact = self.drop_rock(x, y);
+        match contact {
+            Some(c) => return c,
+            None => return (x, self.floor),
         }
-        return (x, self.floor);
     }
 
     fn has_rock_at(&self, x: usize, y: usize) -> bool {
         let set = self.rocks.get(&x);
-        if set.is_some() {
-            return set.unwrap().contains(&y);
+        match set {
+            Some(s) => s.contains(&y),
+            None => false,
         }
-
-        false
     }
 
     fn has_rock_at_with_floor(&self, x: usize, y: usize) -> bool {
-        if y == self.floor {
-            return true;
-        }
-        else {
-            return self.has_rock_at(x, y);
-        }
+        return self.has_rock_at(x, y) || y == self.floor;
     }
 
-    fn floor_ord(&self) -> usize
+    fn compute_floor(&self) -> usize
     {
         self.rocks.iter().map(|(_, set)| set.iter().max().unwrap()).max().unwrap() +2
     }
@@ -190,19 +184,19 @@ fn main() {
         silver += 1;
     }
     silver -= 1;
-
+    
     println!("Silver: {}", silver);
 
     let mut cave2 = Cave::new();
     rock_paths.iter().for_each(|p| cave2.add_rock_path(p));
-
+    
     let mut filled = false;
     let mut gold = 0;
     while !filled {
         filled = cave2.sim_sand2(500);
         gold += 1;
     }
-
+    
     println!("Gold: {}", gold);
 }
 
